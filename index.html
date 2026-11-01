@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Matrisgym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: ett provhäfte. Matrisen är huvudfiguren, svarsalternativen ligger bredvid på bred skärm och under på mobil. */
+:root {
+  --bg: #E8ECF1;
+  --card: #FBFCFD;
+  --ink: #141A26;
+  --muted: #586376;
+  --line: #C3CBD7;
+  --accent: #2A45C9;
+  --accent-soft: #DDE3FA;
+  --ok: #1D7A4F;
+  --ok-soft: #D5EDDE;
+  --bad: #B23E2A;
+  --bad-soft: #F5DCD6;
+  --warn: #A86A12;
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --f-body: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141B; --card: #181E28; --ink: #E4E8EF; --muted: #98A3B5; --line: #303A4A;
+    --accent: #95A8FF; --accent-soft: #242E55; --ok: #5DCB94; --ok-soft: #173426;
+    --bad: #FF8D77; --bad-soft: #3D201A; --warn: #E7AE4A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141B; --card: #181E28; --ink: #E4E8EF; --muted: #98A3B5; --line: #303A4A;
+  --accent: #95A8FF; --accent-soft: #242E55; --ok: #5DCB94; --ok-soft: #173426;
+  --bad: #FF8D77; --bad-soft: #3D201A; --warn: #E7AE4A; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1060px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 56px; }
+header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1.5px solid var(--line); margin-bottom: 24px; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 1.7rem; letter-spacing: -0.02em; background: none; border: 0; color: var(--ink); padding: 0; cursor: pointer; }
+.brand span { color: var(--accent); }
+.tag { font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.3rem); font-weight: 700; line-height: 1.12; }
+h2 { font-size: 1.25rem; font-weight: 700; }
+h3 { font-size: 1.02rem; font-weight: 700; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.lead { font-size: 1.05rem; max-width: 60ch; color: var(--muted); }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.label { font-family: var(--f-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+button { font: inherit; cursor: pointer; }
+.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 6px; padding: 10px 16px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--card); font-weight: 600; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost:hover { border-color: var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: default; filter: none; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+/* Home */
+.home { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.modes { display: grid; gap: 12px; }
+.mode { text-align: left; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: center; padding: 16px 18px; background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; color: var(--ink); }
+.mode:hover { border-color: var(--ink); }
+.mode .meta { grid-column: 1; font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); }
+.mode .go { grid-row: 1 / span 3; grid-column: 2; font-family: var(--f-mono); color: var(--accent); font-size: 1.2rem; }
+.mode p { grid-column: 1; color: var(--muted); font-size: 0.93rem; }
+.panel { background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.steps { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.hist li { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--line); font-family: var(--f-mono); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.hist li:last-child { border-bottom: 0; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* Puzzle */
+.matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; border: 1.5px solid var(--ink); background: var(--card); width: 100%; max-width: 420px; aspect-ratio: 1; }
+.matrix .c { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; place-items: center; min-width: 0; min-height: 0; overflow: hidden; }
+.matrix .c:nth-child(3n) { border-right: 0; }
+.matrix .c:nth-child(n+7) { border-bottom: 0; }
+.matrix svg, .opt svg { width: 100%; height: 100%; display: block; }
+.matrix .q { font-family: var(--f-mono); font-size: clamp(1.6rem, 6vw, 2.4rem); color: var(--accent); font-weight: 600; background: repeating-linear-gradient(135deg, transparent 0 7px, var(--accent-soft) 7px 8px); width: 100%; height: 100%; display: grid; place-items: center; }
+.opts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 420px; }
+.opt { position: relative; aspect-ratio: 1; padding: 4px; background: var(--card); border: 1.5px solid var(--line); border-radius: 6px; color: var(--ink); min-width: 0; }
+.opt:hover:not(:disabled) { border-color: var(--ink); }
+.opt .l { position: absolute; top: 3px; left: 6px; font-family: var(--f-mono); font-size: 0.7rem; color: var(--muted); }
+.opt.sel { border: 2.5px solid var(--accent); background: var(--accent-soft); }
+.opt.right { border: 2.5px solid var(--ok); background: var(--ok-soft); }
+.opt.wrong { border: 2.5px solid var(--bad); background: var(--bad-soft); }
+.opt:disabled { cursor: default; }
+.mini .matrix, .mini .opts { max-width: 300px; }
+.mini .opts { gap: 6px; }
+
+.play { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 28px 36px; align-items: start; }
+.playbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; margin-bottom: 18px; }
+.playbar .left { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.timer { font-family: var(--f-mono); font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.timer.low { color: var(--warn); }
+.bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 22px; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 100%; transition: width 0.25s linear; }
+.bar.low i { background: var(--warn); }
+.side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-family: var(--f-mono); font-size: 0.75rem; border: 1px solid var(--line); background: var(--card); }
+.pill.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+.pill.bad { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.explain { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; display: flex; flex-direction: column; gap: 8px; }
+.explain ul { margin: 0; padding-left: 1.1em; display: grid; gap: 5px; }
+.lvl { display: flex; gap: 4px; flex-wrap: wrap; }
+.lvl button { width: 34px; height: 34px; border-radius: 6px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font-family: var(--f-mono); }
+.lvl button.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.lvl button.auto { width: auto; padding: 0 10px; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 0.92rem; }
+.keys { font-size: 0.82rem; color: var(--muted); }
+kbd { font-family: var(--f-mono); font-size: 0.75rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--card); }
+
+/* School */
+.school { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.school .mode { grid-template-columns: 1fr; }
+.school .mode .go { display: none; }
+
+/* Results */
+.score { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-end; }
+.score .big { font-family: var(--f-display); font-size: 3rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.plot { width: 100%; overflow-x: auto; }
+.plot svg { width: 100%; height: auto; display: block; }
+.review { list-style: none; margin: 0; padding: 0; display: grid; }
+.review > li { border-bottom: 1px solid var(--line); }
+.review > li > button { width: 100%; display: grid; grid-template-columns: 3ch 1fr auto auto; gap: 14px; align-items: center; padding: 10px 4px; background: none; border: 0; color: var(--ink); text-align: left; font-family: var(--f-mono); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.review > li > button:hover { background: var(--accent-soft); }
+.review .detail { padding: 6px 4px 22px; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; }
+
+@media (max-width: 760px) {
+  .home, .play, .review .detail { grid-template-columns: minmax(0, 1fr); }
+  .matrix, .opts { max-width: 100%; }
+  .play .matrix { max-width: 380px; margin: 0 auto; }
+  .play .opts { max-width: 380px; margin: 0 auto; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="mg-hatch" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="5" style="stroke: var(--ink); stroke-width: 1.9"></line>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <button class="brand" id="home-btn" type="button">Matris<span>gym</span></button>
+    <span class="tag">3×3-matriser · 20 uppgifter · 2:00 per uppgift</span>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script id="gen">
+// ---------- Generator: egna slumpade matrisuppgifter ----------
+const ATTRS = ['count', 'shape', 'fill', 'size', 'rot', 'pos'];
+const SYM = ['circle', 'square', 'triangle', 'diamond', 'hexagon', 'pentagon'];
+const ASYM = ['arrow', 'pac', 'ell'];
+const FILLS = ['empty', 'hatch', 'solid'];
+const SHAPE_SV = { circle: 'cirkel', square: 'kvadrat', triangle: 'triangel', diamond: 'romb', hexagon: 'sexhörning', pentagon: 'femhörning', arrow: 'pil', pac: 'cirkel med urtag', ell: 'L-form' };
+const FILL_SV = { empty: 'tom', hatch: 'randig', solid: 'fylld' };
+const SIZE_SV = ['liten', 'mellan', 'stor'];
+const LETTERS = 'ABCDEFGH';
+
+const rnd = Math.random;
+const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+const pick = a => a[Math.floor(rnd() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sample = (a, n) => shuffle(a).slice(0, n);
+const mod = (a, m) => ((a % m) + m) % m;
+const grid3 = f => [0, 1, 2].map(r => [0, 1, 2].map(c => f(r, c)));
+const listSv = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' och ' + a[a.length - 1];
+
+function allowedRules(attr, L) {
+  const r = [];
+  if (attr === 'count') { r.push('prog'); if (L >= 2) r.push('latin', 'rowconst'); if (L >= 5) r.push('arith'); }
+  if (attr === 'shape') r.push('latin', 'rowconst');
+  if (attr === 'fill') { r.push('rowconst'); if (L >= 2) r.push('latin'); }
+  if (attr === 'size') { r.push('prog'); if (L >= 3) r.push('latin'); }
+  if (attr === 'rot' && L >= 3) r.push('prog');
+  if (attr === 'pos') { if (L >= 3) r.push('prog'); if (L >= 4) r.push('latin'); }
+  return r;
+}
+const N_ACTIVE = [0, 1, 1, 2, 2, 3, 3, 4, 4];
+
+function planRules(L, forced, nA) {
+  nA = nA || N_ACTIVE[L];
+  const plan = forced ? [forced] : [];
+  let pool = shuffle(ATTRS.filter(a => allowedRules(a, L).length && !(forced && forced.attr === a)));
+  if (L >= 7 && !forced) pool.sort((a, b) => (['rot', 'pos'].includes(b) ? 1 : 0) - (['rot', 'pos'].includes(a) ? 1 : 0));
+  while (plan.length < nA && pool.length) { const a = pool.shift(); plan.push({ attr: a, type: pick(allowedRules(a, L)) }); }
+  return plan;
+}
+
+function domain(attr, ctx) {
+  return { count: [1, 2, 3, 4, 5], shape: ctx.shapes, fill: FILLS, size: [0, 1, 2], rot: [0, 1, 2, 3, 4, 5, 6, 7], pos: [0, 1, 2, 3, 4, 5, 6, 7] }[attr];
+}
+function stepsFor(attr, L) {
+  if (attr === 'rot') return L < 5 ? [2, -2] : [1, 2, 3, -1, -2, -3];
+  return L < 5 ? [1, 2, -1, -2] : [1, 2, 3, -1, -2, -3];
+}
+
+function genAttr(attr, type, ctx) {
+  const info = { attr, type };
+  let g;
+  if (type === 'latin') {
+    const vals = sample(domain(attr, ctx), 3), sh = pick([1, 2]);
+    g = grid3((r, c) => vals[(c + sh * r) % 3]); info.vals = vals;
+  } else if (type === 'rowconst') {
+    const vals = sample(domain(attr, ctx), 3);
+    g = grid3(r => vals[r]);
+  } else if (type === 'prog') {
+    if (attr === 'count') {
+      const s = pick([1, -1]); info.s = s;
+      const bases = [0, 1, 2].map(() => s > 0 ? ri(1, 4) : ri(3, 6));
+      g = grid3((r, c) => bases[r] + s * c);
+    } else if (attr === 'size') {
+      const s = pick([1, -1]); info.s = s;
+      g = grid3((r, c) => s > 0 ? c : 2 - c);
+    } else {
+      const s = pick(ctx.steps || stepsFor(attr, ctx.L)); info.s = s;
+      const bases = [0, 1, 2].map(() => ri(0, 7));
+      g = grid3((r, c) => mod(bases[r] + s * c, 8));
+    }
+  } else if (type === 'arith') {
+    const op = pick(['+', '-']); info.op = op;
+    for (;;) {
+      const rows = [0, 1, 2].map(() => {
+        if (op === '+') { const a = ri(1, 3), b = ri(1, 3); return [a, b, a + b]; }
+        const a = ri(3, 6), b = ri(1, a - 1); return [a, b, a - b];
+      });
+      if (rows.some(([a, b, c]) => b - a !== c - b)) { g = rows; break; }
+    }
+  }
+  info.text = describe(info);
+  return { grid: g, info };
+}
+
+function describe(i) {
+  const dir = s => s > 0 ? 'medurs' : 'moturs';
+  if (i.attr === 'count') {
+    if (i.type === 'prog') return `Antal: ${i.s > 0 ? 'ökar' : 'minskar'} med 1 för varje ruta åt höger.`;
+    if (i.type === 'latin') return `Antal: varje rad har ${listSv(i.vals.slice().sort((a, b) => a - b).map(String))} figurer, en gång var.`;
+    if (i.type === 'rowconst') return 'Antal: samma inom raden, ett nytt antal på varje rad.';
+    return i.op === '+' ? 'Antal: ruta 1 + ruta 2 = ruta 3 i varje rad.' : 'Antal: ruta 1 − ruta 2 = ruta 3 i varje rad.';
+  }
+  if (i.attr === 'shape') return i.type === 'latin' ? `Form: varje rad har ${listSv(i.vals.map(v => SHAPE_SV[v]))}, en gång var.` : 'Form: samma inom raden, en ny form på varje rad.';
+  if (i.attr === 'fill') return i.type === 'latin' ? 'Fyllning: tom, randig och fylld en gång var i varje rad.' : 'Fyllning: samma inom raden, en ny fyllning på varje rad.';
+  if (i.attr === 'size') return i.type === 'prog' ? `Storlek: figurerna ${i.s > 0 ? 'växer' : 'krymper'} för varje ruta åt höger.` : 'Storlek: liten, mellan och stor en gång var i varje rad.';
+  if (i.attr === 'rot') return `Rotation: figuren vrids ${Math.abs(i.s) * 45}° ${dir(i.s)} för varje ruta åt höger.`;
+  if (i.attr === 'pos') return i.type === 'prog' ? `Pricken: flyttar ${Math.abs(i.s)} steg ${dir(i.s)} runt kanten för varje ruta åt höger.` : 'Pricken: samma tre platser finns i varje rad, en gång var.';
+  return '';
+}
+
+function constVal(attr, ctx) {
+  return { count: ri(1, 3), shape: pick(ctx.shapes), fill: pick(FILLS), size: ri(1, 2), rot: 0, pos: -1 }[attr];
+}
+
+function altVal(attr, ans, flat, ctx, info) {
+  let cands;
+  if (attr === 'count') cands = [ans - 1, ans + 1, ans + 2, ans - 2].filter(v => v >= 1 && v <= 6);
+  else if (attr === 'shape') cands = ctx.shapes.filter(v => v !== ans);
+  else if (attr === 'fill') cands = FILLS.filter(v => v !== ans);
+  else if (attr === 'size') cands = [0, 1, 2].filter(v => v !== ans);
+  else { const s = (info && info.s) || 2; cands = [...new Set([mod(ans - s, 8), mod(ans + 4, 8), mod(ans + s, 8), mod(ans + 1, 8)])].filter(v => v !== ans); }
+  const present = new Set(flat.slice(0, 8));
+  const pref = cands.filter(v => present.has(v));
+  return pick(pref.length && rnd() < 0.8 ? pref : cands);
+}
+
+function balancedOptions(answer, dims, keyOf) {
+  // 3 egenskaper × 2 värden = 8 alternativ; varje värde finns i exakt hälften, så svaret går inte att gissa fram.
+  const opts = [];
+  for (let m = 0; m < 8; m++) {
+    const o = { ...answer };
+    dims.forEach((d, i) => { if (m & (1 << i)) d.apply(o); });
+    opts.push(o);
+  }
+  const order = shuffle([0, 1, 2, 3, 4, 5, 6, 7]);
+  const options = order.map(i => opts[i]);
+  const keys = new Set(options.map(keyOf));
+  if (keys.size !== 8) return null;
+  return { options, answer: order.indexOf(0) };
+}
+
+const objKey = c => [c.shape, c.count, c.fill, c.size, c.rot, c.pos].join('|');
+
+function genObj(L, forced, nA) {
+  for (let tries = 0; tries < 50; tries++) {
+    const plan = planRules(L, forced, nA);
+    const rotActive = plan.some(p => p.attr === 'rot');
+    const ctx = { shapes: rotActive ? ASYM : SYM, L, steps: forced && forced.steps };
+    const grids = {}, infos = {};
+    for (const a of ATTRS) {
+      const p = plan.find(p => p.attr === a);
+      if (p) { const g = genAttr(a, p.type, a === (forced && forced.attr) ? ctx : { ...ctx, steps: null }); grids[a] = g.grid; infos[a] = g.info; }
+      else { const v = constVal(a, ctx); grids[a] = grid3(() => v); }
+    }
+    const cells = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) { const o = {}; for (const a of ATTRS) o[a] = grids[a][r][c]; cells.push(o); }
+    const answer = cells[8];
+    const active = plan.map(p => p.attr);
+    const visibleInactive = ['shape', 'count', 'fill', 'size'].filter(a => !active.includes(a));
+    const chosen = shuffle(active).slice(0, 3);
+    for (const a of shuffle(visibleInactive)) if (chosen.length < 3) chosen.push(a);
+    const dims = chosen.map(a => { const v = altVal(a, answer[a], grids[a].flat(), ctx, infos[a]); return { attr: a, apply: o => { o[a] = v; } }; });
+    const res = balancedOptions(answer, dims, objKey);
+    if (!res) continue;
+    const rules = plan.map(p => infos[p.attr].text);
+    const inactive = ATTRS.filter(a => !active.includes(a) && a !== 'rot' && a !== 'pos');
+    const note = inactive.length ? 'Det som inte nämns ovan är detsamma i alla rutor.' : '';
+    return { family: 'obj', level: L, cells: cells.slice(0, 8), answerCell: answer, options: res.options, answer: res.answer, rules, note };
+  }
+  throw new Error('genObj gav upp');
+}
+
+// Linjeuppgifter: 8 linjer och en ring som kan finnas eller saknas.
+const OPS = {
+  or: { f: (a, b) => a | b, text: 'Linjer: ruta 3 har alla delar från ruta 1 och ruta 2 tillsammans.' },
+  xor: { f: (a, b) => a ^ b, text: 'Linjer: ruta 3 har de delar som finns i bara en av ruta 1 och 2. Det som finns i båda försvinner.' },
+  and: { f: (a, b) => a & b, text: 'Linjer: ruta 3 har bara de delar som finns i både ruta 1 och ruta 2.' },
+  minus: { f: (a, b) => a & ~b, text: 'Linjer: ruta 3 är ruta 1 minus de delar som finns i ruta 2.' },
+};
+const NBITS = 9;
+const bitsOf = m => [...Array(NBITS).keys()].filter(b => m & (1 << b));
+const randMask = k => sample([...Array(NBITS).keys()], k).reduce((m, b) => m | (1 << b), 0);
+
+function genOvl(L, op, withPos) {
+  const ops = L <= 3 ? ['or'] : L === 4 ? ['or', 'xor'] : ['or', 'xor', 'and', 'minus'];
+  op = op || pick(ops);
+  if (withPos === undefined) withPos = L >= 6;
+  for (let tries = 0; tries < 50; tries++) {
+    const rows = [0, 1, 2].map(() => {
+      for (;;) {
+        const a = randMask(ri(2, 4)), b = randMask(ri(2, 4));
+        if ((a & b) && (a & ~b) && (b & ~a)) return [a, b, OPS[op].f(a, b)];
+      }
+    });
+    let posGrid = grid3(() => -1), posInfo = null;
+    if (withPos) { const g = genAttr('pos', 'prog', { L: Math.max(L, 5) }); posGrid = g.grid; posInfo = g.info; }
+    const cells = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) cells.push({ mask: rows[r][c], pos: posGrid[r][c] });
+    const answer = cells[8];
+    const dims = [];
+    if (withPos) { const v = altVal('pos', answer.pos, posGrid.flat(), {}, posInfo); dims.push({ apply: o => { o.pos = v; } }); }
+    const rel = shuffle(bitsOf(rows[2][0] | rows[2][1]));
+    const rest = shuffle(bitsOf(~(rows[2][0] | rows[2][1]) & ((1 << NBITS) - 1)));
+    const bits = rel.concat(rest).slice(0, 3 - dims.length);
+    bits.forEach(b => dims.push({ apply: o => { o.mask ^= (1 << b); } }));
+    const res = balancedOptions(answer, dims, c => c.mask + '|' + c.pos);
+    if (!res || res.options.some(o => o.mask === 0 && o.pos < 0)) continue;
+    const rules = [OPS[op].text];
+    if (posInfo) rules.push(posInfo.text);
+    return { family: 'ovl', level: L, op, cells: cells.slice(0, 8), answerCell: answer, options: res.options, answer: res.answer, rules, note: 'Regeln gäller rad för rad, från vänster till höger.' };
+  }
+  throw new Error('genOvl gav upp');
+}
+
+function genPuzzle(L) {
+  return (L >= 3 && rnd() < 0.3) ? genOvl(L) : genObj(L);
+}
+
+const SCHOOL = [
+  { id: 'antal', name: 'Antal', text: 'Hur många figurer rutan har. Antalet ökar, minskar eller går runt mellan tre värden.', gen: (L, n) => genObj(L, { attr: 'count', type: pick(['prog', 'latin', 'rowconst']) }, n) },
+  { id: 'rakna', name: 'Räkna ihop', text: 'Ruta 1 plus eller minus ruta 2 ger antalet i ruta 3.', gen: (L, n) => genObj(L, { attr: 'count', type: 'arith' }, n) },
+  { id: 'form', name: 'Form', text: 'Tre former som återkommer en gång per rad, eller en form per rad.', gen: (L, n) => genObj(L, { attr: 'shape', type: pick(['latin', 'rowconst']) }, n) },
+  { id: 'fyllning', name: 'Fyllning', text: 'Tom, randig och fylld fördelas över raden.', gen: (L, n) => genObj(L, { attr: 'fill', type: pick(['latin', 'rowconst']) }, n) },
+  { id: 'storlek', name: 'Storlek', text: 'Figurerna växer, krymper eller fördelar tre storlekar.', gen: (L, n) => genObj(L, { attr: 'size', type: pick(['prog', 'latin']) }, n) },
+  { id: 'rotation', name: 'Rotation', text: 'Figuren vrids lika mycket för varje steg åt höger.', gen: (L, n) => genObj(L, { attr: 'rot', type: 'prog', steps: [1, 2, 3, -1, -2, -3] }, n) },
+  { id: 'prick', name: 'Pricken', text: 'En prick som vandrar runt kanten eller växlar mellan tre platser.', gen: (L, n) => genObj(L, { attr: 'pos', type: pick(['prog', 'latin']), steps: [1, 2, 3, -1, -2, -3] }, n) },
+  { id: 'or', name: 'Lägg ihop', text: 'Ruta 3 är ruta 1 och ruta 2 ovanpå varandra.', gen: (L, n) => genOvl(L, 'or', n > 1) },
+  { id: 'xor', name: 'Bara i en', text: 'Det som finns i båda rutorna försvinner, resten blir kvar.', gen: (L, n) => genOvl(L, 'xor', n > 1) },
+  { id: 'and', name: 'Det gemensamma', text: 'Bara det som finns i båda rutorna blir kvar.', gen: (L, n) => genOvl(L, 'and', n > 1) },
+  { id: 'minus', name: 'Ta bort', text: 'Ruta 1 minus det som finns i ruta 2.', gen: (L, n) => genOvl(L, 'minus', n > 1) },
+];
+</script>
+
+<script>
+// ---------- Ritning ----------
+const LAY = { 1: [[0, 0]], 2: [[-.5, 0], [.5, 0]], 3: [[0, -.48], [-.5, .42], [.5, .42]], 4: [[-.5, -.5], [.5, -.5], [-.5, .5], [.5, .5]], 5: [[-.56, -.56], [.56, -.56], [0, 0], [-.56, .56], [.56, .56]], 6: [[-.5, -.62], [.5, -.62], [-.5, 0], [.5, 0], [-.5, .62], [.5, .62]] };
+const RBASE = { 1: 24, 2: 14.5, 3: 13.5, 4: 13, 5: 10, 6: 9 };
+const SIZE_F = [0.55, 0.77, 1];
+const PP = [[12, 12], [50, 10], [88, 12], [90, 50], [88, 88], [50, 90], [12, 88], [10, 50]];
+const SEG = [[20, 20, 80, 20], [80, 20, 80, 80], [80, 80, 20, 80], [20, 80, 20, 20], [20, 20, 80, 80], [80, 20, 20, 80], [20, 50, 80, 50], [50, 20, 50, 80]];
+
+const f1 = n => Math.round(n * 10) / 10;
+function reg(n, r, start, cx, cy) {
+  const pts = [];
+  for (let i = 0; i < n; i++) { const a = (start + i * 360 / n) * Math.PI / 180; pts.push(f1(cx + r * Math.cos(a)) + ',' + f1(cy + r * Math.sin(a))); }
+  return pts.join(' ');
+}
+function unitPoly(pts, r, cx, cy, deg) {
+  // Vrid punkterna själva, inte elementet, så att randningen alltid ligger åt samma håll.
+  const t = (deg || 0) * Math.PI / 180, co = Math.cos(t), si = Math.sin(t);
+  return pts.map(([x, y]) => f1(cx + (x * co - y * si) * r) + ',' + f1(cy + (x * si + y * co) * r)).join(' ');
+}
+
+function shapeSVG(shape, cx, cy, r, rot, fill) {
+  const fv = fill === 'solid' ? 'var(--ink)' : fill === 'hatch' ? 'url(#mg-hatch)' : 'none';
+  const sw = r < 8 ? 1.8 : 2.4;
+  const st = `style="fill:${fv};stroke:var(--ink);stroke-width:${sw};stroke-linejoin:round"`;
+  const deg = rot * 45;
+  switch (shape) {
+    case 'circle': return `<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${f1(r)}" ${st}/>`;
+    case 'square': return `<polygon points="${reg(4, r * 1.02, 45, cx, cy)}" ${st}/>`;
+    case 'triangle': return `<polygon points="${reg(3, r * 1.15, -90, cx, cy + r * 0.15)}" ${st}/>`;
+    case 'diamond': return `<polygon points="${unitPoly([[0, -1.1], [0.78, 0], [0, 1.1], [-0.78, 0]], r, cx, cy)}" ${st}/>`;
+    case 'hexagon': return `<polygon points="${reg(6, r * 1.02, 0, cx, cy)}" ${st}/>`;
+    case 'pentagon': return `<polygon points="${reg(5, r * 1.06, -90, cx, cy + r * 0.06)}" ${st}/>`;
+    case 'arrow': return `<polygon points="${unitPoly([[0, -1.05], [0.72, -0.12], [0.28, -0.12], [0.28, 0.95], [-0.28, 0.95], [-0.28, -0.12], [-0.72, -0.12]], r, cx, cy, deg)}" ${st}/>`;
+    case 'ell': return `<polygon points="${unitPoly([[-0.72, -0.95], [-0.18, -0.95], [-0.18, 0.42], [0.72, 0.42], [0.72, 0.95], [-0.72, 0.95]], r, cx, cy, deg)}" ${st}/>`;
+    case 'pac': {
+      const a1 = (-90 + 38 + deg) * Math.PI / 180, a2 = (-90 - 38 + deg) * Math.PI / 180;
+      const x1 = f1(cx + r * Math.cos(a1)), y1 = f1(cy + r * Math.sin(a1)), x2 = f1(cx + r * Math.cos(a2)), y2 = f1(cy + r * Math.sin(a2));
+      return `<path d="M${f1(cx)} ${f1(cy)} L${x1} ${y1} A${f1(r)} ${f1(r)} 0 1 1 ${x2} ${y2} Z" ${st}/>`;
+    }
+  }
+  return '';
+}
+
+function dotSVG(pos) {
+  if (pos < 0) return '';
+  const [x, y] = PP[pos];
+  return `<circle cx="${x}" cy="${y}" r="4.6" style="fill:var(--ink)"/>`;
+}
+
+function cellSVG(cell, family) {
+  let s = '';
+  if (family === 'obj') {
+    const lay = LAY[cell.count], r = RBASE[cell.count] * SIZE_F[cell.size];
+    for (const [x, y] of lay) s += shapeSVG(cell.shape, 50 + x * 36, 50 + y * 36, r, cell.rot, cell.fill);
+  } else {
+    SEG.forEach((g, b) => { if (cell.mask & (1 << b)) s += `<line x1="${g[0]}" y1="${g[1]}" x2="${g[2]}" y2="${g[3]}" style="stroke:var(--ink);stroke-width:3.6;stroke-linecap:round"/>`; });
+    if (cell.mask & (1 << 8)) s += '<circle cx="50" cy="50" r="13" style="fill:none;stroke:var(--ink);stroke-width:3.4"/>';
+  }
+  s += dotSVG(cell.pos);
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg>`;
+}
+
+function matrixHTML(p) {
+  const cells = p.cells.map(c => `<div class="c">${cellSVG(c, p.family)}</div>`).join('');
+  return `<div class="matrix" role="img" aria-label="Matris med åtta figurer och en tom ruta">${cells}<div class="c"><div class="q">?</div></div></div>`;
+}
+
+function optionsHTML(p, st) {
+  return `<div class="opts">${p.options.map((o, i) => {
+    let cls = 'opt';
+    if (st.reveal) { if (i === p.answer) cls += ' right'; else if (i === st.chosen) cls += ' wrong'; }
+    else if (i === st.sel) cls += ' sel';
+    return `<button type="button" class="${cls}" data-opt="${i}" aria-label="Alternativ ${LETTERS[i]}"${st.reveal ? ' disabled' : ''}><span class="l">${LETTERS[i]}</span>${cellSVG(o, p.family)}</button>`;
+  }).join('')}</div>`;
+}
+
+function explainHTML(p, chosen) {
+  const head = chosen === undefined ? `Rätt svar: ${LETTERS[p.answer]}`
+    : chosen === null ? `Tiden tog slut. Rätt svar: ${LETTERS[p.answer]}`
+    : chosen === p.answer ? `Rätt, ${LETTERS[p.answer]}` : `Du valde ${LETTERS[chosen]}. Rätt svar: ${LETTERS[p.answer]}`;
+  return `<div class="explain"><h3>${head}</h3><ul>${p.rules.map(r => `<li>${r}</li>`).join('')}</ul>${p.note ? `<p class="muted">${p.note}</p>` : ''}</div>`;
+}
+
+// ---------- Lagring ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('matrisgym.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('matrisgym.' + k, JSON.stringify(v)); } catch (e) { /* ingen lagring */ } },
+};
+
+// ---------- Tillstånd ----------
+const TEST_LEN = 20, TIME = 120;
+const app = document.getElementById('app');
+const S = {
+  view: 'home', mode: null, items: [], cur: null, sel: null, revealed: false, level: 3,
+  practiceLevel: store.get('practiceLevel', 'auto'), practiceTimer: store.get('practiceTimer', false),
+  stats: { n: 0, ok: 0, streak: 0 }, school: null, timerEnd: 0, tick: null, example: null, exampleShown: false, open: null,
+};
+
+function stopTimer() { clearInterval(S.tick); S.tick = null; }
+function startTimer() {
+  stopTimer();
+  S.timerEnd = Date.now() + TIME * 1000;
+  updateTimer();
+  S.tick = setInterval(updateTimer, 250);
+}
+function updateTimer() {
+  const left = Math.max(0, Math.ceil((S.timerEnd - Date.now()) / 1000));
+  const t = document.getElementById('timer'), b = document.getElementById('tbar');
+  if (t) { t.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); t.classList.toggle('low', left <= 20); }
+  if (b) { b.firstElementChild.style.width = (left / TIME * 100) + '%'; b.classList.toggle('low', left <= 20); }
+  if (left <= 0) { stopTimer(); onTimeout(); }
+}
+
+function go(view) { stopTimer(); S.view = view; render(); window.scrollTo(0, 0); }
+
+// ---------- Vyer ----------
+function render() {
+  if (S.view === 'home') return renderHome();
+  if (S.view === 'school') return renderSchool();
+  if (S.view === 'play') return renderPlay();
+  if (S.view === 'results') return renderResults();
+}
+
+function renderHome() {
+  if (!S.example) S.example = genObj(4);
+  const hist = store.get('history', []);
+  const p = S.example;
+  app.innerHTML = `
+  <div class="home">
+    <div class="stack">
+      <h1>Träna på matrisuppgifter med samma tidsgräns som i riktiga logiktest.</h1>
+      <p class="lead">Varje uppgift är ett rutnät på 3×3 där sista rutan saknas. Hitta regeln som gäller raderna och välj den figur som passar. Uppgifterna slumpas fram, så du får aldrig samma uppgift två gånger.</p>
+      <div class="modes">
+        <button class="mode" type="button" data-act="test"><h2>Provläge</h2><span class="meta">20 uppgifter · 2:00 per uppgift · anpassar svårigheten</span><p>Som ett riktigt prov. Inget facit förrän du är klar.</p><span class="go">→</span></button>
+        <button class="mode" type="button" data-act="practice"><h2>Fri träning</h2><span class="meta">välj nivå 1–8 · facit direkt</span><p>Du ser lösningen och regeln efter varje svar.</p><span class="go">→</span></button>
+        <button class="mode" type="button" data-act="school"><h2>Regelskola</h2><span class="meta">11 regeltyper · en i taget</span><p>Lär dig känna igen varje typ av regel för sig.</p><span class="go">→</span></button>
+      </div>
+      <div class="panel">
+        <h3>Arbetsgång för varje uppgift</h3>
+        <ol class="steps">
+          <li>Läs första raden. Vad ändras från vänster till höger?</li>
+          <li>Ta en egenskap i taget: antal, form, fyllning, storlek, vridning, prickar, linjer.</li>
+          <li>Kontrollera att regeln också gäller rad två.</li>
+          <li>Bestäm hur svaret ska se ut innan du tittar på alternativen.</li>
+          <li>Stryk alternativ som bryter mot någon regel. Gissa efter ungefär 1:30 om du har fastnat.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h3>Dina senaste prov</h3>
+        ${hist.length ? `<ul class="hist">${hist.slice(-6).reverse().map(h => `<li><span>${h.d}</span><span>${h.ok}/${h.n} rätt</span><span>nivå ${h.est}</span></li>`).join('')}</ul>` : '<p class="muted">Inga prov än. Resultatet sparas här i din webbläsare när du har gjort ett prov.</p>'}
+      </div>
+    </div>
+    <div class="stack mini">
+      <span class="label">Exempeluppgift · nivå 4</span>
+      ${matrixHTML(p)}
+      ${optionsHTML(p, { reveal: S.exampleShown, chosen: null })}
+      <div class="row">
+        <button class="btn ghost" type="button" data-act="ex-show">${S.exampleShown ? 'Dölj lösningen' : 'Visa lösningen'}</button>
+        <button class="btn ghost" type="button" data-act="ex-new">Ny exempeluppgift</button>
+      </div>
+      ${S.exampleShown ? explainHTML(p) : ''}
+    </div>
+  </div>`;
+}
+
+function renderSchool() {
+  app.innerHTML = `
+  <div class="stack">
+    <h1>Regelskola</h1>
+    <p class="lead">Välj en regeltyp. De tre första uppgifterna har bara den regeln. Sedan läggs en och till sist två andra regler till, så att du lär dig hitta den i en blandad uppgift.</p>
+    <div class="school">${SCHOOL.map(s => `<button class="mode" type="button" data-school="${s.id}"><h2>${s.name}</h2><p>${s.text}</p></button>`).join('')}</div>
+  </div>`;
+}
+
+function modeLabel() {
+  if (S.mode === 'test') return 'Provläge';
+  if (S.mode === 'school') return 'Regelskola · ' + SCHOOL.find(s => s.id === S.school.id).name;
+  return 'Fri träning';
+}
+
+function renderPlay() {
+  const it = S.cur, p = it.p;
+  const timed = S.mode === 'test' || (S.mode === 'practice' && S.practiceTimer);
+  let left = '';
+  if (S.mode === 'test') left = `<span class="label">Uppgift ${S.items.length} av ${TEST_LEN}</span>`;
+  else left = `<span class="label">Nivå ${p.level}</span><span class="pill">${S.stats.ok}/${S.stats.n} rätt</span>${S.stats.streak >= 2 ? `<span class="pill ok">${S.stats.streak} i rad</span>` : ''}`;
+
+  let side = '';
+  if (S.mode === 'test') {
+    side = `<div class="row"><button class="btn" type="button" data-act="next"${S.sel === null ? ' disabled' : ''}>${S.items.length === TEST_LEN ? 'Lämna in' : 'Nästa uppgift'}</button><button class="btn ghost" type="button" data-act="quit">Avbryt provet</button></div>
+      <p class="keys">Välj med <kbd>A</kbd>–<kbd>H</kbd> eller <kbd>1</kbd>–<kbd>8</kbd>, gå vidare med <kbd>Enter</kbd>. Du kan ändra ditt val tills du går vidare.</p>`;
+  } else {
+    if (S.revealed) side += explainHTML(p, it.chosen) + `<div class="row"><button class="btn" type="button" data-act="next">Nästa uppgift</button></div>`;
+    else side += `<p class="muted">Klicka på det alternativ du tror passar. Du ser facit direkt.</p>`;
+    if (S.mode === 'practice') {
+      side += `<div class="panel"><span class="label">Nivå</span><div class="lvl">
+        <button type="button" class="auto${S.practiceLevel === 'auto' ? ' on' : ''}" data-lvl="auto">Anpassa</button>
+        ${[1, 2, 3, 4, 5, 6, 7, 8].map(l => `<button type="button" class="${S.practiceLevel === l ? 'on' : ''}" data-lvl="${l}">${l}</button>`).join('')}
+      </div><p class="muted" style="font-size:.88rem">Nivån gäller från nästa uppgift. Anpassa höjer efter rätt svar och sänker efter fel.</p>
+      <label class="toggle"><input type="checkbox" id="ptimer"${S.practiceTimer ? ' checked' : ''}> 2 minuter per uppgift</label></div>`;
+    }
+    side += `<p class="keys"><kbd>A</kbd>–<kbd>H</kbd> svarar, <kbd>Enter</kbd> ger nästa uppgift.</p><div class="row"><button class="btn ghost" type="button" data-act="home">Till startsidan</button></div>`;
+  }
+
+  app.innerHTML = `
+    <div class="playbar"><div class="left"><h2>${modeLabel()}</h2>${left}</div>${timed ? '<span class="timer" id="timer">2:00</span>' : ''}</div>
+    ${timed ? '<div class="bar" id="tbar"><i></i></div>' : ''}
+    <div class="play">
+      <div class="stack">${matrixHTML(p)}</div>
+      <div class="side">${optionsHTML(p, { sel: S.sel, reveal: S.revealed, chosen: it.chosen })}${side}</div>
+    </div>`;
+  if (timed && S.tick) updateTimer();
+}
+
+function levelPlot(items) {
+  const W = window.innerWidth < 600 ? 340 : 600, H = 170, l = 30, r = 10, t = 12, b = 28;
+  const x = i => l + (W - l - r) * (items.length > 1 ? i / (items.length - 1) : 0.5);
+  const y = v => t + (H - t - b) * (8 - v) / 7;
+  let g = '';
+  for (let v = 1; v <= 8; v++) g += `<line x1="${l}" x2="${W - r}" y1="${y(v)}" y2="${y(v)}" style="stroke:var(--line);stroke-width:1"/><text x="${l - 10}" y="${y(v) + 4}" text-anchor="end" style="fill:var(--muted);font:11px var(--f-mono)">${v}</text>`;
+  [1, 5, 10, 15, 20].filter(n => n <= items.length).forEach(n => { g += `<text x="${x(n - 1)}" y="${H - 8}" text-anchor="middle" style="fill:var(--muted);font:11px var(--f-mono)">${n}</text>`; });
+  const pts = items.map((it, i) => `${f1(x(i))},${f1(y(it.p.level))}`).join(' ');
+  g += `<polyline points="${pts}" style="fill:none;stroke:var(--accent);stroke-width:2"/>`;
+  items.forEach((it, i) => { g += `<circle cx="${f1(x(i))}" cy="${f1(y(it.p.level))}" r="5" style="fill:${it.ok ? 'var(--ok)' : 'var(--bad)'};stroke:var(--card);stroke-width:1.5"/>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Nivå per uppgift">${g}</svg>`;
+}
+
+function estimate(items) {
+  const last = items.slice(-8);
+  return Math.round(last.reduce((s, it) => s + it.p.level, 0) / last.length * 2) / 2;
+}
+
+function renderResults() {
+  const items = S.items, ok = items.filter(i => i.ok).length;
+  const est = estimate(items);
+  const times = items.filter(i => i.time != null).map(i => i.time);
+  const avg = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+  const timeouts = items.filter(i => i.chosen === null).length;
+  app.innerHTML = `
+  <div class="stack">
+    <span class="label">Provet är klart</span>
+    <div class="score">
+      <div><div class="big">${ok}/${items.length}</div><span class="label">rätt</span></div>
+      <div><div class="big">${String(est).replace('.', ',')}</div><span class="label">nivå, snitt av sista 8</span></div>
+      <div><div class="big">${Math.floor(avg / 60)}:${String(avg % 60).padStart(2, '0')}</div><span class="label">snittid per uppgift</span></div>
+    </div>
+    <p class="muted" style="max-width:62ch">Nivån går från 1 till 8 och höjs efter varje rätt svar. Det är Matrisgyms egen skala och går inte att översätta till poängen i ett riktigt test, men den visar om du blir bättre från gång till gång.${timeouts ? ` ${timeouts} ${timeouts === 1 ? 'uppgift' : 'uppgifter'} hann du inte svara på.` : ''}</p>
+    <div class="panel"><span class="label">Nivå per uppgift · grön = rätt, röd = fel</span><div class="plot">${levelPlot(items)}</div></div>
+    <div class="row"><button class="btn" type="button" data-act="test">Gör ett nytt prov</button><button class="btn ghost" type="button" data-act="practice">Fri träning</button><button class="btn ghost" type="button" data-act="home">Till startsidan</button></div>
+    <h2>Gå igenom uppgifterna</h2>
+    <ul class="review">${items.map((it, i) => `<li><button type="button" data-open="${i}" aria-expanded="${S.open === i}"><span>${i + 1}</span><span>Nivå ${it.p.level}</span><span>${it.time != null ? Math.floor(it.time / 60) + ':' + String(it.time % 60).padStart(2, '0') : ''}</span><span class="pill ${it.ok ? 'ok' : 'bad'}">${it.ok ? 'rätt' : it.chosen === null ? 'ingen tid' : 'fel'}</span></button>
+      ${S.open === i ? `<div class="detail mini"><div class="stack">${matrixHTML(it.p)}${optionsHTML(it.p, { reveal: true, chosen: it.chosen })}</div><div>${explainHTML(it.p, it.chosen)}</div></div>` : ''}</li>`).join('')}</ul>
+  </div>`;
+}
+
+// ---------- Flöde ----------
+function newItem() {
+  let p;
+  if (S.mode === 'test') p = genPuzzle(S.level);
+  else if (S.mode === 'school') { const n = S.school.i; const extra = n < 3 ? 1 : n < 6 ? 2 : 3; p = SCHOOL.find(s => s.id === S.school.id).gen(5, extra); S.school.i++; }
+  else p = genPuzzle(S.practiceLevel === 'auto' ? S.level : S.practiceLevel);
+  S.cur = { p, chosen: undefined, ok: null, t0: Date.now(), time: null };
+  S.sel = null; S.revealed = false;
+  if (S.mode === 'test') S.items.push(S.cur);
+  S.view = 'play';
+  stopTimer();
+  render();
+  if (S.mode === 'test' || (S.mode === 'practice' && S.practiceTimer)) startTimer();
+  window.scrollTo(0, 0);
+}
+
+function start(mode, schoolId) {
+  S.mode = mode; S.items = []; S.level = 3; S.stats = { n: 0, ok: 0, streak: 0 }; S.open = null;
+  if (mode === 'school') S.school = { id: schoolId, i: 0 };
+  newItem();
+}
+
+function adapt(ok) { S.level = ok ? Math.min(8, S.level + 1) : Math.max(1, S.level - 1); }
+
+function choose(i) {
+  if (S.view !== 'play' || S.revealed) return;
+  if (S.mode === 'test') { S.sel = i; render(); return; }
+  answer(i);
+}
+
+function answer(i) {
+  const it = S.cur;
+  it.chosen = i; it.ok = i === it.p.answer; it.time = Math.round((Date.now() - it.t0) / 1000);
+  stopTimer();
+  if (S.mode === 'test') {
+    adapt(it.ok);
+    if (S.items.length >= TEST_LEN) finishTest(); else newItem();
+    return;
+  }
+  S.revealed = true;
+  S.stats.n++; if (it.ok) { S.stats.ok++; S.stats.streak++; } else S.stats.streak = 0;
+  if (S.mode === 'practice' && S.practiceLevel === 'auto') adapt(it.ok);
+  render();
+}
+
+function onTimeout() {
+  if (S.view !== 'play' || S.revealed) return;
+  if (S.mode === 'test') { answer(S.sel); return; }
+  answer(null);
+}
+
+function finishTest() {
+  const ok = S.items.filter(i => i.ok).length;
+  const hist = store.get('history', []);
+  const d = new Date();
+  hist.push({ d: d.toLocaleDateString('sv-SE') + ' ' + d.toTimeString().slice(0, 5), ok, n: S.items.length, est: String(estimate(S.items)).replace('.', ',') });
+  store.set('history', hist.slice(-30));
+  go('results');
+}
+
+// ---------- Händelser ----------
+document.getElementById('home-btn').addEventListener('click', () => go('home'));
+app.addEventListener('click', e => {
+  const o = e.target.closest('[data-opt]');
+  if (o && !o.disabled && S.view === 'play') return choose(+o.dataset.opt);
+  const a = e.target.closest('[data-act]');
+  if (a) {
+    const act = a.dataset.act;
+    if (act === 'test') return start('test');
+    if (act === 'practice') return start('practice');
+    if (act === 'school') return go('school');
+    if (act === 'home' || act === 'quit') return go('home');
+    if (act === 'next') { if (S.mode === 'test') { if (S.sel !== null) answer(S.sel); } else newItem(); return; }
+    if (act === 'ex-show') { S.exampleShown = !S.exampleShown; return render(); }
+    if (act === 'ex-new') { S.example = genObj(ri(3, 6)); S.exampleShown = false; return render(); }
+  }
+  const sc = e.target.closest('[data-school]');
+  if (sc) return start('school', sc.dataset.school);
+  const lv = e.target.closest('[data-lvl]');
+  if (lv) { S.practiceLevel = lv.dataset.lvl === 'auto' ? 'auto' : +lv.dataset.lvl; store.set('practiceLevel', S.practiceLevel); return render(); }
+  const op = e.target.closest('[data-open]');
+  if (op) { const i = +op.dataset.open; S.open = S.open === i ? null : i; return render(); }
+});
+app.addEventListener('change', e => {
+  if (e.target.id === 'ptimer') {
+    S.practiceTimer = e.target.checked; store.set('practiceTimer', S.practiceTimer);
+    if (S.practiceTimer && !S.revealed) { render(); startTimer(); } else { stopTimer(); render(); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (S.view !== 'play' || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  let i = LETTERS.toLowerCase().indexOf(k);
+  if (i < 0 && /^[1-8]$/.test(k)) i = +k - 1;
+  if (i >= 0 && k.length === 1) { e.preventDefault(); return choose(i); }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (S.mode === 'test') { if (S.sel !== null) answer(S.sel); }
+    else if (S.revealed) newItem();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
